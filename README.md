@@ -91,7 +91,8 @@ nano config/settings.conf
 | `NETBIOS_NAME` | Nom NetBIOS visible sur le réseau |
 | `ZEROTIER_NETWORK_ID` | Réseau ZeroTier pour accès distant (optionnel) |
 
-> `config/settings.conf` est ignoré par git — ne jamais le committer.
+> `config/settings.conf` est chiffré via **git-crypt** — illisible sur GitHub sans la clé.
+> Voir [docs/SECRETS.md](docs/SECRETS.md) pour gérer la clé et déchiffrer sur une nouvelle machine.
 
 ---
 
@@ -101,9 +102,22 @@ Le bot écoute en permanence les commandes envoyées dans le chat autorisé.
 
 | Commande | Description |
 |----------|-------------|
-| `/scan` | Scan du réseau local (nmap -sn) — retourne IPs + hostnames |
+| `/scan` | Scan nmap du réseau local — IP, hostname, fabricant, adresse MAC, latence |
 | `/status` | État de chaque service systemd (opencanary, bot, mac-spoof…) |
 | `/help` | Liste des commandes disponibles |
+
+Exemple de réponse `/scan` :
+```
+Scan réseau  192.168.1.0/24
+8 hôte(s) trouvé(s)
+
+192.168.1.1  router.local
+    Teltonika Networks  ·  3c:d9:2b:a4:7e:21  ·  2.3 ms
+
+192.168.1.42  nas.local
+    Synology  ·  00:11:32:aa:bb:cc  ·  1.1 ms
+...
+```
 
 > Seul le `CHAT_ID` configuré dans `settings.conf` peut déclencher des commandes.
 
@@ -130,7 +144,8 @@ ssh -p 47832 admin@<IP_ZEROTIER>
 backup-db-honeypot/
 ├── install.sh                     Script d'installation automatique
 ├── config/
-│   ├── settings.conf.example      Config à copier et remplir (ne pas committer settings.conf)
+│   ├── settings.conf              Config réelle — chiffrée git-crypt (illisible sur GitHub)
+│   ├── settings.conf.example      Template public avec valeurs génériques
 │   └── opencanary.conf            Config OpenCanary (ports, services, logs)
 ├── scripts/
 │   ├── telegram_notify.py         Alertes Telegram temps réel (stdin → Telegram)
@@ -155,6 +170,7 @@ backup-db-honeypot/
 | Document | Contenu |
 |----------|---------|
 | [docs/INSTALL.md](docs/INSTALL.md) | Installation manuelle pas à pas |
+| [docs/SECRETS.md](docs/SECRETS.md) | Gestion des credentials chiffrés (git-crypt) |
 | [docs/MIGRATION_BATEAU.md](docs/MIGRATION_BATEAU.md) | Migration vers le réseau du bord |
 
 ---

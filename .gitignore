@@ -1,9 +1,17 @@
-# Ne jamais committer ces fichiers !
-config/settings.conf
+# Données runtime (générées sur la Pi)
+geo_cache.json
+stats.json
+
+# Artefacts
 *.img
 *.bak
 __pycache__/
 *.pyc
 .env
-geo_cache.json
-stats.json
+
+# Clé git-crypt — ne JAMAIS committer
+*.key
+
+# settings.conf est versionné et chiffré via git-crypt.
+# Décommenter la ligne ci-dessous UNIQUEMENT si git-crypt n'est pas configuré.
+# config/settings.conf
