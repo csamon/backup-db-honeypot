@@ -1,0 +1,14 @@
+[Unit]
+Description=backup-db-honeypot — Bot Telegram interactif
+After=network-online.target opencanary.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/opencanary/venv/bin/python3 /opt/opencanary/telegram_bot.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -41,6 +41,7 @@ Toute tentative d'intrusion est loggée et envoyée en temps réel sur **Telegra
 
 - Alertes Telegram temps réel avec géolocalisation IP (ip-api.com)
 - Rapport quotidien automatique : stats, top IPs, top passwords
+- **Bot Telegram interactif** — commandes `/scan`, `/status`, `/help` depuis le chat
 - Page Grafana pixel-perfect avec vrais assets SVG
 - Détection de scans de ports via iptables
 - MAC spoofing HP ProLiant (`Hewlett Packard`)
@@ -94,6 +95,20 @@ nano config/settings.conf
 
 ---
 
+## Bot Telegram
+
+Le bot écoute en permanence les commandes envoyées dans le chat autorisé.
+
+| Commande | Description |
+|----------|-------------|
+| `/scan` | Scan du réseau local (nmap -sn) — retourne IPs + hostnames |
+| `/status` | État de chaque service systemd (opencanary, bot, mac-spoof…) |
+| `/help` | Liste des commandes disponibles |
+
+> Seul le `CHAT_ID` configuré dans `settings.conf` peut déclencher des commandes.
+
+---
+
 ## Accès admin
 
 ```bash
@@ -119,12 +134,14 @@ backup-db-honeypot/
 │   └── opencanary.conf            Config OpenCanary (ports, services, logs)
 ├── scripts/
 │   ├── telegram_notify.py         Alertes Telegram temps réel (stdin → Telegram)
+│   ├── telegram_bot.py            Bot Telegram interactif (/scan, /status, /help)
 │   ├── daily_summary.py           Rapport quotidien + reset des stats
 │   ├── update_grafana_skin.py     Génère la page login Grafana pixel-perfect
 │   └── update_ip_ignorelist.sh    Recharge ip.ignorelist au boot
 ├── systemd/
 │   ├── opencanary.service
 │   ├── opencanary-telegram.service
+│   ├── telegram-bot.service
 │   └── mac-spoof.service
 └── docs/
     ├── INSTALL.md                 Installation manuelle détaillée

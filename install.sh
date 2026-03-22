@@ -25,7 +25,7 @@ log "Démarrage installation backup-db-honeypot"
 # Mise à jour système
 log "Mise à jour des paquets..."
 apt update -qq
-apt install -y python3-pip python3-dev python3-venv libssl-dev libffi-dev iptables rsyslog samba -qq
+apt install -y python3-pip python3-dev python3-venv libssl-dev libffi-dev iptables rsyslog samba nmap -qq
 
 # OpenCanary
 log "Installation OpenCanary..."
@@ -41,6 +41,7 @@ sed "s/backup-db-honeypot/${NODE_ID:-backup-db-honeypot}/" config/opencanary.con
 log "Installation des scripts..."
 cp scripts/telegram_notify.py /opt/opencanary/telegram_notify.py
 cp scripts/daily_summary.py /opt/opencanary/daily_summary.py
+cp scripts/telegram_bot.py /opt/opencanary/telegram_bot.py
 cp scripts/update_grafana_skin.py /opt/opencanary/update_grafana_skin.py
 cp scripts/update_ip_ignorelist.sh /usr/local/bin/opencanary-update-ip.sh
 chmod +x /usr/local/bin/opencanary-update-ip.sh
@@ -64,6 +65,7 @@ update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy 2>/dev/null || tr
 log "Installation services systemd..."
 cp systemd/opencanary.service /etc/systemd/system/
 cp systemd/opencanary-telegram.service /etc/systemd/system/
+cp systemd/telegram-bot.service /etc/systemd/system/
 
 # MAC Spoofing
 if [ "${MAC_SPOOF_ENABLED}" = "true" ]; then
@@ -101,10 +103,11 @@ log "Configuration cron rapport 8h..."
 
 # Activer et démarrer
 systemctl daemon-reload
-systemctl enable opencanary opencanary-telegram
+systemctl enable opencanary opencanary-telegram telegram-bot
 systemctl start opencanary
 sleep 2
 systemctl start opencanary-telegram
+systemctl start telegram-bot
 
 [ "${MAC_SPOOF_ENABLED}" = "true" ] && systemctl start mac-spoof
 [ -n "${NETBIOS_NAME}" ] && systemctl restart nmbd
@@ -115,6 +118,7 @@ echo ""
 echo "Vérification :"
 systemctl is-active opencanary && echo "  opencanary : OK" || warn "  opencanary : FAILED"
 systemctl is-active opencanary-telegram && echo "  opencanary-telegram : OK" || warn "  opencanary-telegram : FAILED"
+systemctl is-active telegram-bot && echo "  telegram-bot : OK" || warn "  telegram-bot : FAILED"
 echo ""
 echo "Ports actifs :"
 ss -tlnp | grep twistd
