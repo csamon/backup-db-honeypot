@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenCanary Telegram Notifications
+After=network.target opencanary.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/bin/bash -c 'tail -Fn0 /var/log/opencanary.log | /opt/opencanary/venv/bin/python3 /opt/opencanary/telegram_notify.py'
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=MAC Address Spoofing (HP ProLiant)
+Before=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+# Modifier l'adresse MAC selon settings.conf
+ExecStart=/sbin/ip link set dev wlan0 address 3c:d9:2b:a4:7e:21
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

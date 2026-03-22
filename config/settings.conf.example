@@ -1,0 +1,29 @@
+# ============================================================
+# backup-db-honeypot — Configuration
+# Copie ce fichier en settings.conf et remplis les valeurs
+# ============================================================
+
+# --- Telegram ---
+TELEGRAM_TOKEN="VOTRE_TOKEN_ICI"
+TELEGRAM_CHAT_ID="VOTRE_CHAT_ID_ICI"
+
+# --- Réseau ---
+WIFI_SSID="NomDuReseau"
+WIFI_PASSWORD="MotDePasseWifi"
+SSH_PORT="47832"
+
+# --- MAC Spoofing ---
+# Mettre false pour désactiver
+MAC_SPOOF_ENABLED="true"
+MAC_SPOOF_ADDRESS="3c:d9:2b:a4:7e:21"
+WIFI_INTERFACE="wlan0"
+
+# --- NetBIOS ---
+NETBIOS_NAME="OPENDBBACKUP01"
+NETBIOS_SERVER_STRING="Open Database Backup Service"
+
+# --- Honeypot ---
+NODE_ID="backup-db-honeypot"
+
+# --- ZeroTier (optionnel) ---
+ZEROTIER_NETWORK_ID=""

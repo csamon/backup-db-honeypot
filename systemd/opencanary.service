@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenCanary Honeypot
+After=network.target
+
+[Service]
+Type=forking
+User=root
+ExecStartPre=/usr/local/bin/opencanary-update-ip.sh
+ExecStart=/opt/opencanary/venv/bin/opencanaryd --start --uid=0 --gid=0
+ExecStop=/opt/opencanary/venv/bin/opencanaryd --stop
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

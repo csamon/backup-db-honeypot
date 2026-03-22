@@ -1,0 +1,9 @@
+# Ne jamais committer ces fichiers !
+config/settings.conf
+*.img
+*.bak
+__pycache__/
+*.pyc
+.env
+geo_cache.json
+stats.json
