@@ -10,7 +10,7 @@
 ## Installation rapide
 
 ```bash
-git clone https://github.com/<TON_USER>/backup-db-honeypot.git
+git clone https://github.com/csamon/backup-db-honeypot.git
 cd backup-db-honeypot
 cp config/settings.conf.example config/settings.conf
 nano config/settings.conf   # Remplis token Telegram, WiFi, etc.
