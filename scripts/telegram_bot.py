@@ -65,15 +65,14 @@ def get_updates(offset=None):
 # ── Commandes ─────────────────────────────────────────────────────────────────
 
 def cmd_scan():
-    """Scan du réseau local via nmap -sn, retourne IPs + hostnames."""
-    # Déterminer le réseau local à partir de l'interface configurée
+    """Scan du réseau local via nmap -sn, retourne IPs + hostnames + MAC + vendor."""
     network = _get_local_network()
     if not network:
         return "Impossible de déterminer le réseau local."
 
     try:
         result = subprocess.run(
-            ["nmap", "-sn", "--host-timeout", "3s", network],
+            ["nmap", "-sn", "-R", "--host-timeout", "3s", network],
             capture_output=True, text=True, timeout=90,
         )
     except FileNotFoundError:
@@ -85,13 +84,27 @@ def cmd_scan():
     if not hosts:
         return f"Aucun hôte trouvé sur <code>{network}</code>."
 
-    lines = [f"<b>Scan réseau</b>  <code>{network}</code>", f"{len(hosts)} hôte(s) trouvé(s)\n"]
-    for ip, name in _sort_ips(hosts):
-        if name:
-            lines.append(f"• <code>{ip}</code>  —  {name}")
-        else:
-            lines.append(f"• <code>{ip}</code>")
-    return "\n".join(lines)
+    lines = [
+        f"<b>Scan réseau</b>  <code>{network}</code>",
+        f"<i>{len(hosts)} hôte(s) trouvé(s)</i>\n",
+    ]
+    for h in _sort_ips(hosts):
+        # Ligne principale : IP + hostname
+        ip   = h["ip"]
+        name = h.get("name", "")
+        lines.append(f"<code>{ip}</code>  {name}" if name else f"<code>{ip}</code>")
+
+        # Ligne de détails : fabricant · MAC · latence
+        details = []
+        if h.get("vendor"):  details.append(h["vendor"])
+        if h.get("mac"):     details.append(f'<code>{h["mac"]}</code>')
+        if h.get("latency"): details.append(h["latency"])
+        if details:
+            lines.append("    " + "  ·  ".join(details))
+
+        lines.append("")  # séparateur entre hôtes
+
+    return "\n".join(lines).rstrip()
 
 
 def cmd_status():
@@ -121,7 +134,7 @@ def cmd_status():
 def cmd_help():
     return (
         "<b>Commandes disponibles</b>\n\n"
-        "/scan    — Scan du réseau local (IPs + hostnames)\n"
+        "/scan    — Scan du réseau local (IP, hostname, MAC, fabricant, latence)\n"
         "/status  — État des services honeypot\n"
         "/help    — Cette aide"
     )
@@ -153,31 +166,42 @@ def _get_local_network():
 
 
 def _parse_nmap(output):
-    """Parse la sortie nmap -sn → liste de (ip, hostname|None)."""
+    """Parse nmap -sn → liste de dicts {ip, name?, latency?, mac?, vendor?}."""
     hosts = []
-    current_ip = None
-    current_name = None
+    cur = {}
     for line in output.splitlines():
         if "Nmap scan report for" in line:
+            if cur.get("ip") and cur.get("up"):
+                hosts.append(cur)
+            cur = {}
             rest = line.replace("Nmap scan report for", "").strip()
             m = re.match(r"^(.+?)\s+\((\d[\d.]+)\)$", rest)
             if m:
-                current_name = m.group(1)
-                current_ip   = m.group(2)
+                cur["name"] = m.group(1)
+                cur["ip"]   = m.group(2)
             else:
-                current_name = None
-                current_ip   = rest
-        elif "Host is up" in line and current_ip:
-            hosts.append((current_ip, current_name))
-            current_ip = current_name = None
+                cur["ip"] = rest
+        elif "Host is up" in line and cur.get("ip"):
+            cur["up"] = True
+            m = re.search(r"\(([\d.]+)s latency\)", line)
+            if m:
+                ms = float(m.group(1)) * 1000
+                cur["latency"] = f"{ms:.1f} ms"
+        elif "MAC Address:" in line and cur.get("ip"):
+            m = re.match(r"MAC Address: ([0-9A-Fa-f:]+)\s+\((.+)\)", line)
+            if m:
+                cur["mac"]    = m.group(1).lower()
+                cur["vendor"] = m.group(2)
+    if cur.get("ip") and cur.get("up"):
+        hosts.append(cur)
     return hosts
 
 
 def _sort_ips(hosts):
-    """Trie les hôtes par ordre d'adresse IP."""
+    """Trie les hôtes (dicts) par ordre d'adresse IP."""
     def key(h):
         try:
-            return tuple(int(p) for p in h[0].split("."))
+            return tuple(int(p) for p in h["ip"].split("."))
         except Exception:
             return (0, 0, 0, 0)
     return sorted(hosts, key=key)
