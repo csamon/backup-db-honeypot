@@ -41,7 +41,7 @@ Toute tentative d'intrusion est loggée et envoyée en temps réel sur **Telegra
 
 - Alertes Telegram temps réel avec géolocalisation IP (ip-api.com)
 - Rapport quotidien automatique : stats, top IPs, top passwords
-- **Bot Telegram interactif** — commandes `/scan`, `/status`, `/help` depuis le chat
+- **Bot Telegram interactif** — `/scan`, `/ports`, `/who`, `/status`, `/help`
 - Page Grafana pixel-perfect avec vrais assets SVG
 - Détection de scans de ports via iptables
 - MAC spoofing HP ProLiant (`Hewlett Packard`)
@@ -102,21 +102,34 @@ Le bot écoute en permanence les commandes envoyées dans le chat autorisé.
 
 | Commande | Description |
 |----------|-------------|
-| `/scan` | Scan nmap du réseau local — IP, hostname, fabricant, adresse MAC, latence |
-| `/status` | État de chaque service systemd (opencanary, bot, mac-spoof…) |
+| `/scan` | Scan réseau enrichi — nmap + mDNS + NetBIOS + détection MAC aléatoire |
+| `/ports <ip>` | Scan des 200 ports les plus courants d'un hôte |
+| `/who <ip>` | Fiche complète : tous les noms, MAC, latence, ports ouverts |
+| `/status` | État des services + uptime + RAM |
 | `/help` | Liste des commandes disponibles |
+
+Le scan combine trois sources de résolution de noms :
+- **Reverse DNS** (nmap) — noms DNS classiques
+- **mDNS** (avahi) — noms `.local` (Apple, Linux, certains Windows)
+- **NetBIOS** (nbtscan/nmblookup) — noms Windows et imprimantes
+
+Les adresses MAC aléatoires (appareils mobiles avec privacy activée) sont marquées ⚡.
 
 Exemple de réponse `/scan` :
 ```
-Scan réseau  192.168.1.0/24
-8 hôte(s) trouvé(s)
+Scan réseau  192.168.150.0/24
+18 hôte(s)
 
-192.168.1.1  router.local
-    Teltonika Networks  ·  3c:d9:2b:a4:7e:21  ·  2.3 ms
+192.168.150.1
+    Stormshield  ·  00:0d:b4:28:01:29  ·  2.4 ms
 
-192.168.1.42  nas.local
-    Synology  ·  00:11:32:aa:bb:cc  ·  1.1 ms
-...
+192.168.150.56  Laptop-Clem.local
+    Intel Corporate  ·  4c:79:6e:cd:83:59  ·  94.0 ms
+
+192.168.150.63
+    de:56:a9:9a:b3:46 ⚡  ·  73.0 ms
+
+⚡ = MAC aléatoire (appareil mobile probable)
 ```
 
 > Seul le `CHAT_ID` configuré dans `settings.conf` peut déclencher des commandes.
