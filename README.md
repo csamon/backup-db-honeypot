@@ -41,7 +41,7 @@ Toute tentative d'intrusion est loggée et envoyée en temps réel sur **Telegra
 
 - Alertes Telegram temps réel avec géolocalisation IP (ip-api.com)
 - Rapport quotidien automatique : stats, top IPs, top passwords
-- **Bot Telegram interactif** — `/scan`, `/ports`, `/who`, `/status`, `/help`
+- **Bot Telegram interactif** — 14 commandes (scan, watch, ports, who, ping, stats, last, block…)
 - Page Grafana pixel-perfect avec vrais assets SVG
 - Détection de scans de ports via iptables
 - MAC spoofing HP ProLiant (`Hewlett Packard`)
@@ -103,9 +103,17 @@ Le bot écoute en permanence les commandes envoyées dans le chat autorisé.
 | Commande | Description |
 |----------|-------------|
 | `/scan` | Scan réseau enrichi — nmap + mDNS + NetBIOS + détection MAC aléatoire |
+| `/watch [on\|off\|N]` | Surveillance périodique (défaut 5 min) — alerte sur changement |
 | `/ports <ip>` | Scan des 200 ports les plus courants d'un hôte |
 | `/who <ip>` | Fiche complète : tous les noms, MAC, latence, ports ouverts |
-| `/status` | État des services + uptime + RAM |
+| `/ping <ip>` | Ping rapide depuis la Pi |
+| `/stats` | Statistiques du honeypot (total, top IPs, top passwords) |
+| `/last [N]` | Dernières N tentatives d'intrusion (défaut 10) |
+| `/block <ip>` | Bloquer une IP via iptables |
+| `/unblock <ip>` | Débloquer une IP |
+| `/temp` | Température CPU |
+| `/disk` | Espace disque |
+| `/status` | État des services + watch + uptime + RAM + temp |
 | `/help` | Liste des commandes disponibles |
 
 Le scan combine trois sources de résolution de noms :
@@ -115,7 +123,23 @@ Le scan combine trois sources de résolution de noms :
 
 Les adresses MAC aléatoires (appareils mobiles avec privacy activée) sont marquées ⚡.
 
-Exemple de réponse `/scan` :
+### `/watch` — Surveillance réseau continue
+
+Active un scan automatique toutes les N minutes (défaut 5). Le bot enregistre
+les hôtes trouvés comme **baseline** et envoie une alerte Telegram uniquement
+quand un appareil apparaît ou disparaît du réseau. Chaque alerte inclut le scan
+complet et un rappel des commandes disponibles.
+
+```
+/watch         → Active (5 min par défaut)
+/watch 15      → Change l'intervalle à 15 min
+/watch off     → Désactive
+```
+
+L'état du watch est persisté sur disque — il redémarre automatiquement après un reboot de la Pi.
+
+### Exemple `/scan`
+
 ```
 Scan réseau  192.168.150.0/24
 18 hôte(s)
@@ -123,13 +147,14 @@ Scan réseau  192.168.150.0/24
 192.168.150.1
     Stormshield  ·  00:0d:b4:28:01:29  ·  2.4 ms
 
-192.168.150.56  Laptop-Clem.local
+192.168.150.56  Laptop-Clem.local  /  LAPTOP-CLEM
     Intel Corporate  ·  4c:79:6e:cd:83:59  ·  94.0 ms
 
 192.168.150.63
     de:56:a9:9a:b3:46 ⚡  ·  73.0 ms
 
 ⚡ = MAC aléatoire (appareil mobile probable)
+Commandes : /ports <ip> · /who <ip> · /ping <ip> · /block <ip> · /help
 ```
 
 > Seul le `CHAT_ID` configuré dans `settings.conf` peut déclencher des commandes.
